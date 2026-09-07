@@ -34948,6 +34948,8 @@ module.exports = {
   .ns-radio-option input{ width:auto; flex-shrink:0; accent-color: var(--magenta); }
   .ns-radio-option span{ font-family:var(--mono); }
 
+  .existing-sound-audio-slot audio{ height:32px; }
+
   .stat-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:12px; margin-top:2px; }
 
   .autocomplete-dropdown{
@@ -34972,7 +34974,6 @@ module.exports = {
   button.primary:active{ transform: scale(0.99); }
   button.primary:disabled{ background:#3a3d45; color:#7c7f86; cursor:not-allowed; }
 
-  .give-list{ margin-top:16px; display:flex; flex-direction:column; gap:8px; max-height:220px; overflow:auto; }
   .give-cmd{
     background:#0e0f12; border:1px solid var(--line); border-radius:8px;
     padding:10px 12px; font-family:var(--mono); font-size:.78rem; color:#a8e0c9; word-break:break-all;
@@ -34980,10 +34981,6 @@ module.exports = {
   }
   .give-cmd .copy{ flex-shrink:0; background:var(--panel-2); border:1px solid var(--line); color:var(--muted); font-size:.72rem; padding:5px 9px; border-radius:5px; cursor:pointer; }
   .give-cmd .copy:hover{ color:var(--text); border-color:#555; }
-
-  details{ margin-top:16px; }
-  summary{ cursor:pointer; font-size:.82rem; color:var(--muted); }
-  pre{ background:#0e0f12; border:1px solid var(--line); border-radius:8px; padding:14px; overflow:auto; font-size:.76rem; line-height:1.55; font-family:var(--mono); margin-top:10px; max-height:320px; }
 
   .step-num{ display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:4px; background:var(--panel-2); border:1px solid var(--line); font-family:var(--mono); font-size:.72rem; color:var(--muted); margin-right:8px; }
   .change-link{ margin-left:auto; font-size:.8rem; color:var(--magenta); cursor:pointer; text-decoration:underline; text-underline-offset:2px; flex-shrink:0; }
@@ -35005,7 +35002,7 @@ module.exports = {
     <h2><span class="step-num">1</span>作成方法</h2>
     <div class="segmented">
       <button id="modeNewBtn" class="active">新規に作る</button>
-      <button id="modeExistingBtn">既存のパックに追加する</button>
+      <button id="modeExistingBtn">既存のパックを編集する</button>
     </div>
 
     <div id="newModeFields">
@@ -35101,8 +35098,23 @@ module.exports = {
     </div>
   </div>
 
+  <div class="card" id="commonCard">
+    <h2><span class="step-num">3</span>ベースアイテム</h2>
+    <div class="field" style="position:relative;">
+      <label>ベースにするバニラアイテム（/give プレビュー用）</label>
+      <input type="text" id="baseItemInput" placeholder="paper" autocomplete="off">
+      <div id="baseItemDropdown" class="autocomplete-dropdown" style="display:none;"></div>
+      <div class="hint">入力すると候補が絞り込まれます（自由入力も可）</div>
+    </div>
+  </div>
+
+  <div class="card" id="existingContentCard" style="display:none;">
+    <h2><span class="step-num">4</span>既存アイテム一覧</h2>
+    <div id="existingContentList"><div class="hint">「既存のパックを編集する」でパックを読み込むと、ここに中身が表示されます</div></div>
+  </div>
+
   <div class="card">
-    <h2><span class="step-num">3</span>bbmodel・PNG・サウンドファイル</h2>
+    <h2><span class="step-num">5</span>bbmodel・PNG・サウンドファイル</h2>
     <div id="dropzone">
       <div class="icon checker" style="border-radius:6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="M3 7l9 5 9-5"/><path d="M12 12v10"/></svg></div>
       <div class="main-txt">ここに .bbmodel・PNG・音声ファイルをドロップ、またはクリックして選択</div>
@@ -35118,25 +35130,14 @@ module.exports = {
     </div>
   </div>
 
-  <div class="card" id="commonCard">
-    <h2><span class="step-num">4</span>ベースアイテム</h2>
-    <div class="field" style="position:relative;">
-      <label>ベースにするバニラアイテム（/give プレビュー用）</label>
-      <input type="text" id="baseItemInput" placeholder="paper" autocomplete="off">
-      <div id="baseItemDropdown" class="autocomplete-dropdown" style="display:none;"></div>
-      <div class="hint">入力すると候補が絞り込まれます（自由入力も可）</div>
-    </div>
-  </div>
-
-  <div class="card" id="generateCard" style="display:none;">
-    <h2><span class="step-num">5</span>生成</h2>
+  <div class="card" id="generateCard">
+    <h2><span class="step-num">6</span>生成</h2>
     <div class="stat-grid" id="statGrid"></div>
     <div id="warnBox"></div>
     <div id="soundWarnBox"></div>
     <div style="margin-top:18px;">
       <button class="primary" id="generateBtn">リソースパックをダウンロード (.zip)</button>
     </div>
-    <div class="give-list" id="giveList"></div>
   </div>
 
   <footer>
@@ -35246,6 +35247,7 @@ const modeNewBtn = document.getElementById('modeNewBtn');
 const modeExistingBtn = document.getElementById('modeExistingBtn');
 const newModeFields = document.getElementById('newModeFields');
 const existingModeFields = document.getElementById('existingModeFields');
+const existingContentCard = document.getElementById('existingContentCard');
 const icondropzone = document.getElementById('icondropzone');
 const iconFileInput = document.getElementById('iconFileInput');
 const iconPlaceholderTxt = document.getElementById('iconPlaceholderTxt');
@@ -35337,7 +35339,6 @@ const versionHintExisting = document.getElementById('versionHintExisting');
 
 const generateCard = document.getElementById('generateCard');
 const statGrid = document.getElementById('statGrid');
-const giveList = document.getElementById('giveList');
 
 const soundListWrap = document.getElementById('soundListWrap');
 const soundListEl = document.getElementById('soundList');
@@ -35443,6 +35444,20 @@ loadItemList();
 // ---------- mode switching ----------
 modeNewBtn.addEventListener('click', () => setMode('new'));
 modeExistingBtn.addEventListener('click', () => setMode('existing'));
+// Keeps the "1 2 3..." step badges sequential even when a step card
+// (like the existing-item list, which only makes sense in existing-pack
+// mode) is hidden - otherwise hiding one leaves a gap like 1 2 3 5 6.
+function renumberSteps(){
+  let n = 1;
+  document.querySelectorAll('.card').forEach(card => {
+    const span = card.querySelector(':scope > h2 .step-num');
+    if (!span) return;
+    if (card.style.display === 'none') return;
+    span.textContent = n++;
+  });
+}
+renumberSteps();
+
 function setMode(m){
   mode = m;
   modeNewBtn.classList.toggle('active', m === 'new');
@@ -35451,8 +35466,11 @@ function setMode(m){
   existingModeFields.style.display = m === 'existing' ? 'block' : 'none';
   newVersionField.style.display = m === 'new' ? 'block' : 'none';
   existingVersionField.style.display = m === 'existing' ? 'block' : 'none';
+  existingContentCard.style.display = m === 'existing' ? 'block' : 'none';
+  renumberSteps();
   reconcileIds();
   reconcileSoundNames();
+  updateExistingContentCard();
   renderSummary();
 }
 
@@ -35465,7 +35483,7 @@ function getNamespace(){
 function getExternalReservedIds(){
   if (mode === 'existing' && existingPack) {
     const ns = getNamespace();
-    return new Set(existingPack.itemIdsByNs[ns] || []);
+    return new Set([...(existingPack.itemIdsByNs[ns] || [])].filter(id => !existingPack.deletedItemIds.has(`${ns}::${id}`)));
   }
   return new Set();
 }
@@ -35531,7 +35549,20 @@ function renderItemSuggestions(){
     });
   });
 }
-baseItemInput.addEventListener('input', () => { renderItemSuggestions(); renderSummary(); });
+function refreshExistingGiveCommands(){
+  if (!existingPack) return;
+  const baseRaw = (baseItemInput.value || 'paper').trim();
+  const base = baseRaw.includes(':') ? baseRaw : `minecraft:${baseRaw}`;
+  document.querySelectorAll('#existingContentList .existing-entry-preview:not(.existing-entry-sound)').forEach(row => {
+    const [ns, id] = row.dataset.key.split('::');
+    const cmd = `/give @s ${base}[item_model="${ns}:${id}"]`;
+    const span = row.querySelector('.give-cmd span');
+    const copyBtn = row.querySelector('.existing-cmd-copy');
+    if (span) span.textContent = cmd;
+    if (copyBtn) copyBtn.dataset.cmd = cmd;
+  });
+}
+baseItemInput.addEventListener('input', () => { renderItemSuggestions(); renderSummary(); refreshExistingGiveCommands(); });
 baseItemInput.addEventListener('focus', () => { renderItemSuggestions(); });
 document.addEventListener('click', (e) => {
   if (e.target !== baseItemInput && !baseItemDropdown.contains(e.target)) baseItemDropdown.style.display = 'none';
@@ -35601,7 +35632,9 @@ async function loadExistingPack(file){
       namespaces: nsList, itemIdsByNs, soundsJsonByNs,
       fileName: file.name,
       chosenNs: preferredNs,
-      newNsValue: ''
+      newNsValue: '',
+      deletedItemIds: new Set(),
+      deletedSoundNames: new Set()
     };
 
     // If the pack already has its own pack.png, preload it into the icon
@@ -35627,6 +35660,278 @@ async function loadExistingPack(file){
   } catch (err) {
     addGlobalWarning(`「${file.name}」の読み込みに失敗しました（zipとして開けませんでした）`);
   }
+}
+
+function renderExistingContentList(){
+  if (!existingPack || existingPack.chosenNs === '__new__') {
+    return `<div class="hint">既存のパックを読み込んで名前空間を選ぶと、ここに中身が表示されます</div>`;
+  }
+  const ns = existingPack.chosenNs;
+  const baseRaw = (baseItemInput.value || 'paper').trim();
+  const base = baseRaw.includes(':') ? baseRaw : `minecraft:${baseRaw}`;
+  const itemIds = [...(existingPack.itemIdsByNs[ns] || [])].filter(id => !existingPack.deletedItemIds.has(`${ns}::${id}`));
+  const soundNames = Object.keys(existingPack.soundsJsonByNs[ns] || {}).filter(n => !existingPack.deletedSoundNames.has(`${ns}::${n}`));
+  const itemsHtml = itemIds.length
+    ? itemIds.map(id => {
+      const cmd = `/give @s ${base}[item_model="${ns}:${id}"]`;
+      return `
+      <div class="item-row existing-entry-preview" data-key="${escapeHtml(ns)}::${escapeHtml(id)}">
+        <div class="icon checker existing-item-icon" style="border-radius:5px;"></div>
+        <div class="file-info">
+          <div class="file-name">${escapeHtml(id)}</div>
+        </div>
+        <div style="flex:1;"></div>
+        <button class="remove-btn existing-item-del" data-key="${escapeHtml(ns)}::${escapeHtml(id)}" title="削除">✕</button>
+        <div class="sound-preview">
+          <div class="give-cmd"><span>${escapeHtml(cmd)}</span><button class="copy existing-cmd-copy" data-cmd="${escapeHtml(cmd)}">コピー</button></div>
+        </div>
+      </div>`;
+    }).join('')
+    : `<div class="hint">既存アイテムなし</div>`;
+  const soundsHtml = soundNames.length
+    ? soundNames.map(n => `
+      <div class="item-row existing-entry-preview existing-entry-sound" data-key="${escapeHtml(ns)}::${escapeHtml(n)}">
+        <div class="icon checker" style="border-radius:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+        <div class="file-info">
+          <div class="file-name">${escapeHtml(n)}</div>
+        </div>
+        <div style="flex:1;"></div>
+        <button class="remove-btn existing-sound-del" data-key="${escapeHtml(ns)}::${escapeHtml(n)}" title="削除">✕</button>
+        <div class="sound-preview existing-sound-audio-slot"></div>
+      </div>`).join('')
+    : `<div class="hint">既存サウンドなし</div>`;
+  return `
+    <div class="field">
+      <label>「${escapeHtml(ns)}」の既存アイテム</label>
+      <div class="item-list">${itemsHtml}</div>
+    </div>
+    <div class="field" style="margin-top:18px;">
+      <label>「${escapeHtml(ns)}」の既存サウンド</label>
+      <div class="item-list">${soundsHtml}</div>
+    </div>
+  `;
+}
+
+// Rewrites the dedicated "既存アイテム一覧" card and wires up its buttons.
+// Called whenever the loaded pack, chosen namespace, deletions, or base
+// item changes.
+function updateExistingContentCard(){
+  const el = document.getElementById('existingContentList');
+  if (!el) return;
+  el.innerHTML = renderExistingContentList();
+  el.querySelectorAll('.existing-item-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      existingPack.deletedItemIds.add(btn.dataset.key);
+      updateExistingContentCard();
+      renderSummary();
+    });
+  });
+  el.querySelectorAll('.existing-sound-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      existingPack.deletedSoundNames.add(btn.dataset.key);
+      updateExistingContentCard();
+      renderSummary();
+    });
+  });
+  el.querySelectorAll('.existing-cmd-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.cmd).then(() => {
+        const old = btn.textContent; btn.textContent = 'コピーしました';
+        setTimeout(() => btn.textContent = old, 1300);
+      });
+    });
+  });
+  loadExistingPreviews();
+}
+
+// Resolves a texture reference (possibly unqualified, which per Minecraft
+// convention defaults to the "minecraft" namespace, not the current one)
+// into the actual zip path within the loaded existing pack.
+function existingPackAssetPath(ref, kind, defaultNs){
+  const [refNs, refPath] = ref.includes(':') ? ref.split(':') : [defaultNs, ref];
+  return `${existingPack.rootPrefix}assets/${refNs}/${kind}/${refPath}${kind === 'sounds' ? '.ogg' : '.png'}`;
+}
+
+const existingTexDataUrlCache = new Map(); // resolved texture ref -> Promise<dataUrl|null>
+function loadExistingTextureDataUrl(ref){
+  if (!existingTexDataUrlCache.has(ref)) {
+    existingTexDataUrlCache.set(ref, (async () => {
+      const texPath = existingPackAssetPath(ref, 'textures', 'minecraft');
+      const f = existingPack.zip.files[texPath];
+      if (!f) return null;
+      const b64 = await f.async('base64');
+      return `data:image/png;base64,${b64}`;
+    })());
+  }
+  return existingTexDataUrlCache.get(ref);
+}
+
+// Renders a real (already-compiled) Java item model json - the same format
+// this tool itself writes out, or any hand-made one - as a GUI-angle 3D
+// thumbnail. Unlike a raw .bbmodel, textures here are already-resolved
+// resource locations per key ("0", "particle", ...) and face "texture"
+// values are "#0"-style references into that map, so this fetches each
+// referenced texture from the loaded pack instead of a bbmodel's texture list.
+async function renderRealModelThumbnail(modelJson){
+  if (typeof THREE === 'undefined') return null;
+  if (!Array.isArray(modelJson.elements) || !modelJson.elements.length) return null;
+  try {
+    const textures = modelJson.textures || {};
+    const dataUrlByKey = {};
+    await Promise.all(Object.entries(textures).map(async ([k, v]) => {
+      if (typeof v === 'string' && !v.startsWith('#')) dataUrlByKey[k] = await loadExistingTextureDataUrl(v);
+    }));
+    const threeTexByKey = {};
+    async function getThreeTexForKey(key){
+      if (!(key in threeTexByKey)) threeTexByKey[key] = loadThreeTexture(dataUrlByKey[key]);
+      return threeTexByKey[key];
+    }
+
+    const scene = new THREE.Scene();
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 0.75); keyLight.position.set(1, 1.6, 0.8); scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.3); fillLight.position.set(-0.8, -0.4, -1); scene.add(fillLight);
+
+    const group = new THREE.Group();
+    scene.add(group);
+    const FACE_ORDER = ['east','west','up','down','south','north'];
+    let hasAny = false;
+
+    for (const el of modelJson.elements) {
+      if (!el.from || !el.to) continue;
+      const size = [
+        Math.max(Math.abs(el.to[0]-el.from[0]), 0.001),
+        Math.max(Math.abs(el.to[1]-el.from[1]), 0.001),
+        Math.max(Math.abs(el.to[2]-el.from[2]), 0.001)
+      ];
+      const center = [(el.from[0]+el.to[0])/2, (el.from[1]+el.to[1])/2, (el.from[2]+el.to[2])/2];
+      const geo = new THREE.BoxGeometry(size[0], size[1], size[2]);
+      const uvAttr = geo.attributes.uv;
+      const materials = await Promise.all(FACE_ORDER.map(async (dir, faceIdx) => {
+        const f = el.faces && el.faces[dir];
+        if (!f || !f.texture) return new THREE.MeshLambertMaterial({ visible: false });
+        const key = String(f.texture).replace('#', '');
+        const tex = await getThreeTexForKey(key);
+        if (f.uv) {
+          const [x1,y1,x2,y2] = f.uv; // Java model uv is always on a fixed 0-16 scale
+          const u1 = x1/16, v1 = y1/16, u2 = x2/16, v2 = y2/16;
+          const base = faceIdx*4;
+          uvAttr.setXY(base+0, u1, v2); uvAttr.setXY(base+1, u2, v2);
+          uvAttr.setXY(base+2, u1, v1); uvAttr.setXY(base+3, u2, v1);
+        }
+        return new THREE.MeshLambertMaterial({ map: tex || null, transparent: true, alphaTest: 0.05, side: THREE.DoubleSide, color: tex ? 0xffffff : 0xff33cc });
+      }));
+      uvAttr.needsUpdate = true;
+      const mesh = new THREE.Mesh(geo, materials);
+      if (el.rotation) {
+        const origin = el.rotation.origin || [8, 8, 8];
+        const pivot = new THREE.Group();
+        pivot.position.set(origin[0], origin[1], origin[2]);
+        mesh.position.set(center[0]-origin[0], center[1]-origin[1], center[2]-origin[2]);
+        const rad = THREE.MathUtils.degToRad(el.rotation.angle || 0);
+        const axis = el.rotation.axis || 'y';
+        if (axis === 'x') pivot.rotation.x = rad; else if (axis === 'z') pivot.rotation.z = rad; else pivot.rotation.y = rad;
+        pivot.add(mesh);
+        group.add(pivot);
+      } else {
+        mesh.position.set(center[0], center[1], center[2]);
+        group.add(mesh);
+      }
+      hasAny = true;
+    }
+    if (!hasAny) return null;
+
+    group.position.set(-8, -8, -8);
+    const gui = (modelJson.display && modelJson.display.gui) || {};
+    const guiRotation = gui.rotation || [0, 0, 0];
+    const guiScale = gui.scale || [1, 1, 1];
+    const guiTranslation = gui.translation || [0, 0, 0];
+    const pivotGroup = new THREE.Group();
+    pivotGroup.add(group);
+    pivotGroup.rotation.set(THREE.MathUtils.degToRad(guiRotation[0]), THREE.MathUtils.degToRad(guiRotation[1]), THREE.MathUtils.degToRad(guiRotation[2]), 'XYZ');
+    pivotGroup.scale.set(guiScale[0], guiScale[1], guiScale[2]);
+    const translateGroup = new THREE.Group();
+    translateGroup.add(pivotGroup);
+    translateGroup.position.set(guiTranslation[0], guiTranslation[1], guiTranslation[2]);
+    scene.add(translateGroup);
+
+    const box3 = new THREE.Box3().setFromObject(translateGroup);
+    const boxCenter = box3.getCenter(new THREE.Vector3());
+    const boxSize = box3.getSize(new THREE.Vector3());
+    const maxDim = Math.max(boxSize.x, boxSize.y, boxSize.z, 1) * 1.3;
+    const camera = new THREE.OrthographicCamera(-maxDim/2, maxDim/2, maxDim/2, -maxDim/2, 0.1, 1000);
+    camera.position.set(boxCenter.x, boxCenter.y, boxCenter.z + maxDim*2);
+    camera.lookAt(boxCenter);
+
+    const renderer = getThreeRenderer();
+    renderer.setClearColor(0x000000, 0);
+    renderer.clear();
+    renderer.render(scene, camera);
+    const dataUrl = renderer.domElement.toDataURL('image/png');
+    scene.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) (Array.isArray(obj.material) ? obj.material : [obj.material]).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+    });
+    return dataUrl;
+  } catch (e) {
+    return null;
+  }
+}
+
+// For flat (item/generated, no elements) items, just show the referenced
+// texture directly; for real 3D models, render a proper GUI-angle thumbnail.
+async function getExistingItemPreviewUrl(ns, id){
+  try {
+    const modelPath = `${existingPack.rootPrefix}assets/${ns}/models/item/${id}.json`;
+    const f = existingPack.zip.files[modelPath];
+    if (!f) return null;
+    const modelJson = JSON.parse(await f.async('string'));
+    if (Array.isArray(modelJson.elements) && modelJson.elements.length) {
+      const rendered = await renderRealModelThumbnail(modelJson);
+      if (rendered) return rendered;
+    }
+    const textures = modelJson.textures || {};
+    const texRef = textures.layer0 || textures['0'] || Object.values(textures).find(v => typeof v === 'string' && !v.startsWith('#'));
+    if (!texRef || typeof texRef !== 'string') return null;
+    return await loadExistingTextureDataUrl(texRef);
+  } catch (e) { return null; }
+}
+
+async function getExistingSoundPreviewUrl(ns, name){
+  try {
+    const def = existingPack.soundsJsonByNs[ns] && existingPack.soundsJsonByNs[ns][name];
+    const soundsArr = (def && def.sounds) || [];
+    if (!soundsArr.length) return null;
+    const first = soundsArr[0];
+    const ref = typeof first === 'string' ? first : first.name;
+    if (!ref) return null;
+    const oggPath = existingPackAssetPath(ref, 'sounds', 'minecraft');
+    const f = existingPack.zip.files[oggPath];
+    if (!f) return null;
+    const bytes = await f.async('uint8array');
+    return URL.createObjectURL(new Blob([bytes], { type: 'audio/ogg' }));
+  } catch (e) { return null; }
+}
+
+// Fills in the icon/audio previews for the currently-rendered existing
+// item/sound rows, asynchronously (the rows already show a placeholder).
+async function loadExistingPreviews(){
+  if (!existingPack) return;
+  const rows = [...document.querySelectorAll('.existing-entry-preview')];
+  await Promise.all(rows.map(async (row) => {
+    const [ns, key] = row.dataset.key.split('::');
+    if (row.classList.contains('existing-entry-sound')) {
+      const url = await getExistingSoundPreviewUrl(ns, key);
+      const slot = row.querySelector('.existing-sound-audio-slot');
+      if (slot && url) slot.innerHTML = `<audio controls preload="none" src="${url}"></audio>`;
+    } else {
+      const url = await getExistingItemPreviewUrl(ns, key);
+      const iconEl = row.querySelector('.existing-item-icon');
+      if (iconEl && url) {
+        iconEl.outerHTML = `<img src="${url}" class="icon existing-item-icon" style="border-radius:5px;object-fit:contain;background:#0e0f12;image-rendering:pixelated;" alt="">`;
+      }
+    }
+  }));
 }
 
 function renderExistingInfo(){
@@ -35693,9 +35998,9 @@ function renderExistingInfo(){
 
   const onNsChange = (value) => {
     existingPack.chosenNs = value;
-    document.getElementById('existingNewNsFieldWrap').style.display = existingPack.chosenNs === '__new__' ? 'block' : 'none';
     reconcileIds();
     reconcileSoundNames();
+    renderExistingInfo();
     renderSummary();
   };
   if (useRadio) {
@@ -35711,6 +36016,8 @@ function renderExistingInfo(){
     reconcileSoundNames();
     renderSummary();
   });
+
+  updateExistingContentCard();
 }
 
 // ---------- bbmodel loading ----------
@@ -36197,7 +36504,7 @@ function sanitizeSoundEventName(s){
 function getExternalReservedSoundNames(){
   if (mode === 'existing' && existingPack) {
     const ns = getNamespace();
-    return new Set(Object.keys((existingPack.soundsJsonByNs && existingPack.soundsJsonByNs[ns]) || {}));
+    return new Set(Object.keys((existingPack.soundsJsonByNs && existingPack.soundsJsonByNs[ns]) || {}).filter(n => !existingPack.deletedSoundNames.has(`${ns}::${n}`)));
   }
   return new Set();
 }
@@ -36288,7 +36595,6 @@ function handleSoundFiles(fileList){
 
 function renderSounds(){
   soundListWrap.style.display = sounds.length ? 'block' : 'none';
-  generateCard.style.display = (items.length || sounds.length) ? 'block' : 'none';
   const ns = getNamespace();
   soundListEl.innerHTML = sounds.map(s => {
     const statusLabel = s.status === 'converting' ? '変換中…'
@@ -36506,9 +36812,20 @@ function resolveModelJson(converted, ns, itemId, fullRotationSupport){
 // ---------- rendering ----------
 function render(){
   itemListWrap.style.display = items.length ? 'block' : 'none';
-  generateCard.style.display = (items.length || sounds.length) ? 'block' : 'none';
 
-  itemListEl.innerHTML = items.map(it => `
+  renderItemRows();
+  renderWarnings();
+  renderSummary();
+}
+
+function renderItemRows(){
+  const ns = getNamespace();
+  const baseRaw = (baseItemInput.value || 'paper').trim();
+  const base = baseRaw.includes(':') ? baseRaw : `minecraft:${baseRaw}`;
+
+  itemListEl.innerHTML = items.map(it => {
+    const cmd = `/give @s ${base}[item_model="${ns}:${it.id}"]`;
+    return `
     <div class="item-row ${it.converted.warnings.length ? 'has-warning' : ''}" data-uid="${it.uid}">
       ${it.thumbnail
         ? `<img src="${it.thumbnail}" class="icon" style="border-radius:5px; object-fit:contain; background:#0e0f12; image-rendering:pixelated;" alt="">`
@@ -36529,9 +36846,21 @@ function render(){
           <label><input type="checkbox" class="anim-interpolate-input" data-uid="${it.uid}" ${it.converted.animation.interpolate ? 'checked' : ''}> 補間する(interpolate)</label>
         </div>
       ` : ''}
+      <div class="sound-preview">
+        <div class="give-cmd"><span>${escapeHtml(cmd)}</span><button class="copy item-cmd-copy" data-cmd="${escapeHtml(cmd)}">コピー</button></div>
+      </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
+  itemListEl.querySelectorAll('.item-cmd-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(btn.dataset.cmd).then(() => {
+        const old = btn.textContent; btn.textContent = 'コピーしました';
+        setTimeout(() => btn.textContent = old, 1300);
+      });
+    });
+  });
   itemListEl.querySelectorAll('.id-input').forEach(inp => {
     inp.addEventListener('change', () => {
       const uid = Number(inp.dataset.uid);
@@ -36566,9 +36895,6 @@ function render(){
       render();
     });
   });
-
-  renderWarnings();
-  renderSummary();
 }
 
 function renderWarnings(extra){
@@ -36582,34 +36908,28 @@ function renderWarnings(extra){
 
 function renderSummary(){
   renderSounds();
+  renderItemRows();
   const totalEl = items.reduce((s, it) => s + it.converted.elementCount, 0);
   const totalTex = items.reduce((s, it) => s + it.converted.usedTexFiles.length, 0);
   const readySoundCount = sounds.filter(s => s.status === 'ready').length;
 
+  const nsForStats = getNamespace();
+  let finalItemCount = items.length;
+  let finalSoundCount = readySoundCount;
+  if (mode === 'existing' && existingPack && nsForStats) {
+    finalItemCount += [...(existingPack.itemIdsByNs[nsForStats] || [])].filter(id => !existingPack.deletedItemIds.has(`${nsForStats}::${id}`)).length;
+    finalSoundCount += Object.keys(existingPack.soundsJsonByNs[nsForStats] || {}).filter(n => !existingPack.deletedSoundNames.has(`${nsForStats}::${n}`)).length;
+  }
+
   statGrid.innerHTML = `
-    <div class="stat"><div class="num">${items.length}</div><div class="lbl">アイテム数</div></div>
+    <div class="stat"><div class="num">${finalItemCount}</div><div class="lbl">アイテム数</div></div>
     <div class="stat"><div class="num">${totalEl}</div><div class="lbl">立方体（合計）</div></div>
     <div class="stat"><div class="num">${totalTex}</div><div class="lbl">テクスチャ（合計）</div></div>
-    <div class="stat"><div class="num">${readySoundCount}</div><div class="lbl">追加サウンド数</div></div>
+    <div class="stat"><div class="num">${finalSoundCount}</div><div class="lbl">サウンド数</div></div>
   `;
   if (!items.length) return;
 
   const ns = getNamespace();
-  const baseRaw = (baseItemInput.value || 'paper').trim();
-  const base = baseRaw.includes(':') ? baseRaw : `minecraft:${baseRaw}`;
-
-  giveList.innerHTML = items.map(it => {
-    const cmd = `/give @s ${base}[item_model="${ns}:${it.id}"]`;
-    return `<div class="give-cmd"><span>${escapeHtml(cmd)}</span><button class="copy" data-cmd="${escapeHtml(cmd)}">コピー</button></div>`;
-  }).join('');
-  giveList.querySelectorAll('.copy').forEach(btn => {
-    btn.addEventListener('click', () => {
-      navigator.clipboard.writeText(btn.dataset.cmd).then(() => {
-        const old = btn.textContent; btn.textContent = 'コピーしました';
-        setTimeout(() => btn.textContent = old, 1300);
-      });
-    });
-  });
 
   const fullRotationSupport = getFullRotationSupport();
   const previewRotationWarnings = [];
@@ -36622,7 +36942,6 @@ function renderSummary(){
 
 // ---------- generate ----------
 document.getElementById('generateBtn').addEventListener('click', async () => {
-  if (!items.length && !sounds.length) return;
   if (mode === 'existing' && !existingPack) { addGlobalWarning('先に元にするリソースパックのzipを読み込んでください'); return; }
   if (sounds.some(s => s.status === 'converting')) { addGlobalWarning('サウンドの変換が終わるまでお待ちください'); return; }
 
@@ -36640,12 +36959,20 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
       zip.file('pack.mcmeta', JSON.stringify({ pack }, null, 2));
       outFileName = `${sanitizeFileName(packNameInput.value) || ns}.zip`;
     } else {
-      // copy the existing pack, flattening any wrapping folder
+      // copy the existing pack, flattening any wrapping folder, but skip
+      // definition files for items the user marked for deletion
       const entries = Object.keys(existingPack.zip.files);
+      const deletedItemPaths = new Set();
+      existingPack.deletedItemIds.forEach(key => {
+        const [delNs, id] = key.split('::');
+        deletedItemPaths.add(`assets/${delNs}/items/${id}.json`);
+        deletedItemPaths.add(`assets/${delNs}/models/item/${id}.json`);
+      });
       for (const p of entries) {
         if (!p.startsWith(existingPack.rootPrefix)) continue;
         const rel = p.slice(existingPack.rootPrefix.length);
         if (rel === '') continue;
+        if (deletedItemPaths.has(rel)) continue;
         const f = existingPack.zip.files[p];
         if (f.dir) { zip.folder(rel); continue; }
         const content = await f.async('uint8array');
@@ -36701,10 +37028,14 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     }
 
     const readySounds = sounds.filter(s => s.status === 'ready' && s.bytes);
-    if (readySounds.length) {
+    const nsDeletedSoundNames = [...(mode === 'existing' && existingPack ? existingPack.deletedSoundNames : [])]
+      .filter(key => key.startsWith(`${ns}::`))
+      .map(key => key.split('::')[1]);
+    if (readySounds.length || nsDeletedSoundNames.length) {
       const baseSoundsJson = (mode === 'existing' && existingPack && existingPack.soundsJsonByNs[ns])
         ? JSON.parse(JSON.stringify(existingPack.soundsJsonByNs[ns]))
         : {};
+      nsDeletedSoundNames.forEach(name => { delete baseSoundsJson[name]; });
       for (const s of readySounds) {
         baseSoundsJson[s.eventName] = { sounds: [`${ns}:${s.eventName}`] };
         zip.file(`assets/${ns}/sounds/${s.eventName}.ogg`, s.bytes);
