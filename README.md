@@ -1,4 +1,4 @@
-# Custom Resource Pack Generator
+# [Custom Resource Pack Generator](https://ruby-mc-cmd.github.io/custom-resource-pack-generator/)
 
 Blockbenchで作った `.bbmodel`、PNGテクスチャ、音声ファイルをドラッグ&ドロップするだけで、Minecraft用のカスタムリソースパック（zip）を作れるブラウザツールです。サーバー不要・単一HTMLファイルで完結しています。
 
