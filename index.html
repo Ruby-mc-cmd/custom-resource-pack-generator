@@ -35352,6 +35352,19 @@ function sanitizeId(s){
     .replace(/[^a-z0-9_]+/g, '_')
     .replace(/^_+|_+$/g, '') || 'mypack';
 }
+// Namespace segments allow "." (many real mod/pack namespaces use dots,
+// e.g. "my.pack"), unlike item ids - so this keeps dots (and collapses
+// repeats) while still stripping everything else invalid and trimming
+// stray leading/trailing dots/underscores.
+function sanitizeNamespace(s){
+  return (s || 'mypack')
+    .toLowerCase()
+    .replace(/\.bbmodel$|\.json$|\.zip$/i, '')
+    .replace(/[^a-z0-9_.]+/g, '_')
+    .replace(/_{2,}/g, '_')
+    .replace(/\.{2,}/g, '.')
+    .replace(/^[_.]+|[_.]+$/g, '') || 'mypack';
+}
 // For the output ZIP filename only: unlike namespace/item ids, this can keep
 // Japanese and other non-ASCII text - it just needs to be a valid filename,
 // not a valid Minecraft resource-location segment.
@@ -35476,9 +35489,9 @@ function setMode(m){
 
 // ---------- namespace resolution ----------
 function getNamespace(){
-  if (mode === 'new') return sanitizeId(nsInput.value);
-  if (existingPack) return existingPack.chosenNs === '__new__' ? sanitizeId(existingPack.newNsValue) : (existingPack.chosenNs || '');
-  return sanitizeId(nsInput.value);
+  if (mode === 'new') return sanitizeNamespace(nsInput.value);
+  if (existingPack) return existingPack.chosenNs === '__new__' ? sanitizeNamespace(existingPack.newNsValue) : (existingPack.chosenNs || '');
+  return sanitizeNamespace(nsInput.value);
 }
 function getExternalReservedIds(){
   if (mode === 'existing' && existingPack) {
